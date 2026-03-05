@@ -1,7 +1,5 @@
 package io.github.aramarchuk.terminalbuffer
 
-import kotlin.toString
-
 data class Symbol(val char: Char?, val attr: TextAttributes)
 
 class ContentImpl(
