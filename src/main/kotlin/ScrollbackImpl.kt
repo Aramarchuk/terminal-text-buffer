@@ -7,11 +7,11 @@ class ScrollbackImpl(
 ) : Scrollback {
     private val content: ArrayDeque<ArrayDeque<Symbol>> = ArrayDeque()
 
-    internal fun clear() {
+    override fun clear() {
         content.clear()
     }
 
-    internal fun getActualSize() = content.size
+    override fun getActualSize() = content.size
 
     override fun getCharAt(column: Int, row: Int): Char =
         content.getOrNull(row)
