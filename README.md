@@ -25,4 +25,5 @@ A Kotlin implementation of a terminal text buffer with support for cursor operat
 Tell em about numeration of buffer.
 Explain your decision about removing setSize functions.
 Splitting buffer to ScreenContent and Scrollback
+And about delegation problem!
 

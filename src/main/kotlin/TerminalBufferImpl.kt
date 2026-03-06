@@ -3,11 +3,10 @@ package io.github.aramarchuk.terminalbuffer
 class TerminalBufferImpl(
     val width: Int,
     val height: Int,
-    val scrollbackSize: Int
-) : TerminalBuffer {
-    private val screen = ScreenImpl(width, height)
-    private val scrollback = ScrollbackImpl(scrollbackSize)
-
+    val scrollbackSize: Int,
+    val screen: Screen = ScreenImpl(width, height),
+    val scrollback: Scrollback = ScrollbackImpl(scrollbackSize)
+) : TerminalBuffer, ScreenPublic by screen, ScrollbackPublic by scrollback {
     override fun clearScreen() = screen.clearScreen()
     override fun getScreenAndScrollbackAsString(): String {
         val sb = StringBuilder()
@@ -41,7 +40,7 @@ class TerminalBufferImpl(
             scrollback.getLineAsString(row - height)
         }
     }
-    override fun pushLine(line: List<Symbol>) = scrollback.pushLine(line)
+    fun pushLine(line: List<Symbol>) = scrollback.pushLine(line)
 
     override fun insertEmptyLine() {
         screen.scrollDown()

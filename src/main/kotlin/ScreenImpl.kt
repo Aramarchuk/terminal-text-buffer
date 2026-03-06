@@ -27,11 +27,11 @@ class ScreenImpl(
         cursorState.y = 0
     }
 
-    fun writeChar(char: Char) {
+    override fun writeChar(char: Char) {
         screenContent[cursorState.y][cursorState.x] = Symbol(char, cursorState.attr)
     }
 
-    internal fun insertChar(char: Char): Symbol? {
+    override fun insertChar(char: Char): Symbol? {
         val row = cursorState.y
         val col = cursorState.x
 
@@ -50,7 +50,7 @@ class ScreenImpl(
         }
     }
 
-    internal fun scrollUp(): List<Symbol> {
+    override fun scrollUp(): List<Symbol> {
         val topLine = screenContent[0].toList()
 
         for (row in 0 until height - 1) {
@@ -66,7 +66,7 @@ class ScreenImpl(
         return topLine
     }
 
-    internal fun scrollDown() {
+    override fun scrollDown() {
         for (row in height - 1 downTo 1) {
             for (col in 0 until width) {
                 screenContent[row][col] = screenContent[row - 1][col]
@@ -78,16 +78,16 @@ class ScreenImpl(
         }
     }
 
-    internal fun moveCursorToNextLine() {
+    override fun moveCursorToNextLine() {
         cursorState.x = 0
         if (cursorState.y < height - 1) {
             cursorState.y++
         }
     }
 
-    internal fun isAtBottomLine(): Boolean = cursorState.y >= height - 1
+    override fun isAtBottomLine(): Boolean = cursorState.y >= height - 1
 
-    internal fun getLineAsString(row: Int): String {
+    override fun getLineAsString(row: Int): String {
         if (row < 0 || row >= height) {
             error("Row $row out of bounds [0, $height)")
         }
