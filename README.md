@@ -22,3 +22,5 @@ A Kotlin implementation of a terminal text buffer with support for cursor operat
 ./gradlew run
 ```
 
+Tell em about numeration of buffer.
+

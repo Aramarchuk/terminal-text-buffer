@@ -1,54 +1,86 @@
 package io.github.aramarchuk.terminalbuffer
 
 data class TextAttributes(
-    var fg: Int = 7,
-    var bg: Int = 0,
-    var flags: Int = 0
+    val fg: Int = 7,
+    val bg: Int = 0,
+    val flags: Int = 0
 )
 
-data class CursorState(var x: Int, var y: Int, val attr: TextAttributes = TextAttributes())
+data class CursorState(var x: Int, var y: Int, var attr: TextAttributes = TextAttributes())
 
 class ScreenImpl(
-    private var width: Int = 80,
-    private var height: Int = 24,
-    private val cursorState: CursorState = CursorState(0, 0),
-    private val contentImpl: ContentImpl = ContentImpl()
-) : Screen, Content by contentImpl {
-    override fun setWindowSize(width: Int, height: Int) {
-        this.width = width
-        this.height = height
+    private var width: Int,
+    private var height: Int,
+) : Screen {
+    private val cursorState: CursorState = CursorState(0, 0)
+    private val screenContent: List<MutableList<Symbol>> = List(height) {
+        MutableList(width) { Symbol(' ', TextAttributes()) }
     }
     fun getWindowSize() = Pair(width, height)
 
-    override fun insertEmptyLine() {
-        TODO("Not yet implemented")
-    }
-
     override fun clearScreen() {
-        TODO("Not yet implemented")
+        for (row in 0 until height) {
+            for (col in 0 until width) {
+                screenContent[row][col] = Symbol(' ', TextAttributes())
+            }
+        }
+        cursorState.x = 0
+        cursorState.y = 0
     }
 
     override fun clearScreenAndScrollback() {
         TODO("Not yet implemented")
     }
 
-    override fun writeText(text: String) {
-        for (char in text) {
-            writeChar(cursorState.x, cursorState.y, Symbol(char, cursorState.attr))
-            moveCursorRight(1)
+    fun writeChar(char: Char) {
+        screenContent[cursorState.y][cursorState.x] = Symbol(char, cursorState.attr)
+    }
+
+    internal fun scrollUp(): List<Symbol> {
+        val topLine = screenContent[0].toList()
+
+        for (row in 0 until height - 1) {
+            for (col in 0 until width) {
+                screenContent[row][col] = screenContent[row + 1][col]
+            }
+        }
+
+        for (col in 0 until width) {
+            screenContent[height - 1][col] = Symbol(' ', TextAttributes())
+        }
+
+        return topLine
+    }
+
+    internal fun newLine(): List<Symbol>? {
+        cursorState.x = 0
+        return if (cursorState.y < height - 1) {
+            cursorState.y++
+            null
+        } else {
+            scrollUp()
         }
     }
 
-    override fun insertText(text: String) {
-        TODO("Not yet implemented")
+    internal fun getLineAsString(row: Int): String {
+        if (row < 0 || row >= height) {
+            error("Row $row out of bounds [0, $height)")
+        }
+        return screenContent[row].joinToString(separator = "") { it.char.toString() }.trimEnd()
     }
 
-    override fun fillLine(character: Char) {
-        TODO("Not yet implemented")
+    override fun fillLine(char: Char) {
+        val row = cursorState.y
+        for (col in 0 until width) {
+            screenContent[row][col] = Symbol(char, cursorState.attr)
+        }
     }
 
     override fun clearLine() {
-        TODO("Not yet implemented")
+        val row = cursorState.y
+        for (col in 0 until width) {
+            screenContent[row][col] = Symbol(' ', TextAttributes())
+        }
     }
 
     override fun getCursorPosition(): Pair<Int, Int> {
@@ -61,20 +93,19 @@ class ScreenImpl(
     }
 
     override fun moveCursorUp(cells: Int) {
-        TODO("Not yet implemented")
+        cursorState.y = maxOf(0, cursorState.y - cells)
     }
 
     override fun moveCursorDown(cells: Int) {
-        TODO("Not yet implemented")
+        cursorState.y = minOf(height - 1, cursorState.y + cells)
     }
 
     override fun moveCursorLeft(cells: Int) {
-        TODO("Not yet implemented")
+        cursorState.x = maxOf(0, cursorState.x - cells)
     }
 
     override fun moveCursorRight(cells: Int) {
-        cursorState.y += (cells + cursorState.x) / width
-        cursorState.x = (cursorState.x + cells) % width
+        cursorState.x = minOf(width - 1, cursorState.x + cells)
     }
 
     override fun getScreenAsString(): String {
@@ -95,6 +126,7 @@ class ScreenImpl(
         background: Int,
         styles: Set<String>
     ) {
-        TODO("Not yet implemented")
+        val flags = 0
+        cursorState.attr = TextAttributes(foreground, background, flags)
     }
 }

@@ -8,28 +8,28 @@ import kotlin.test.assertEquals
 @DisplayName("ScreenImpl Tests")
 class ScreenImplTest {
 
-    private lateinit var screen: Screen
+    private lateinit var terminal: TerminalBuffer
 
     @BeforeEach
     fun setUp() {
-        screen = ScreenImpl()
-        screen.setWindowSize(80, 24)
+        terminal = TerminalBufferImpl(24, 10, 1000)
     }
 
     @Test
     @DisplayName("Should write text on screen")
     fun testWriteText() {
-        screen.setCursorPosition(0, 0)
-        screen.writeText("Hello")
-        val content = screen.getScreenAsString()
-        assertEquals(true, content.contains("Hello"), "Screen should contain written text")
+        terminal.setCursorPosition(0, 0)
+        terminal.writeText("Hello\n")
+        terminal.writeText("World\n")
+        val content = terminal.getLineAsString(1)
+        assertEquals("World", content, "Screen should contain written text")
     }
 
     @Test
     @DisplayName("Should handle cursor movement")
     fun testCursorPosition() {
-        screen.setCursorPosition(5, 5)
-        val (x, y) = screen.getCursorPosition()
+        terminal.setCursorPosition(5, 5)
+        val (x, y) = terminal.getCursorPosition()
         assertEquals(5, x, "Cursor column should be 5")
         assertEquals(5, y, "Cursor row should be 5")
     }
