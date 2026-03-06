@@ -40,7 +40,6 @@ class TerminalBufferImpl(
             scrollback.getLineAsString(row - height)
         }
     }
-    fun pushLine(line: List<Symbol>) = scrollback.pushLine(line)
 
     override fun insertEmptyLine() {
         screen.scrollDown()
