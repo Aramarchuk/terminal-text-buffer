@@ -7,7 +7,6 @@ class TerminalBufferImpl(
     val screen: Screen = ScreenImpl(width, height),
     val scrollback: Scrollback = ScrollbackImpl(scrollbackSize)
 ) : TerminalBuffer, ScreenPublic by screen, ScrollbackPublic by scrollback {
-    override fun clearScreen() = screen.clearScreen()
     override fun getScreenAndScrollbackAsString(): String {
         val sb = StringBuilder()
         val scrollbackLines = scrollback.getActualSize()
@@ -19,20 +18,6 @@ class TerminalBufferImpl(
         return sb.toString()
     }
 
-    override fun clearLine() = screen.clearLine()
-    override fun fillLine(char: Char) = screen.fillLine(char)
-    override fun getCursorPosition() = screen.getCursorPosition()
-    override fun setCursorPosition(column: Int, row: Int) = screen.setCursorPosition(column, row)
-    override fun moveCursorUp(cells: Int) = screen.moveCursorUp(cells)
-    override fun moveCursorDown(cells: Int) = screen.moveCursorDown(cells)
-    override fun moveCursorLeft(cells: Int) = screen.moveCursorLeft(cells)
-    override fun moveCursorRight(cells: Int) = screen.moveCursorRight(cells)
-    override fun getScreenAsString() = screen.getScreenAsString()
-    override fun setAttribute(foreground: Int, background: Int, styles: Set<String>) =
-        screen.setAttribute(foreground, background, styles)
-
-    override fun getCharAt(column: Int, row: Int) = scrollback.getCharAt(column, row)
-    override fun getAttributesAt(column: Int, row: Int) = scrollback.getAttributesAt(column, row)
     override fun getLineAsString(row: Int): String {
         return if (row < height) {
             screen.getLineAsString(row)
