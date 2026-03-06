@@ -16,7 +16,6 @@ class ScreenImpl(
     private val screenContent: List<MutableList<Symbol>> = List(height) {
         MutableList(width) { Symbol(' ', TextAttributes()) }
     }
-    fun getWindowSize() = Pair(width, height)
 
     override fun clearScreen() {
         for (row in 0 until height) {
@@ -28,12 +27,27 @@ class ScreenImpl(
         cursorState.y = 0
     }
 
-    override fun clearScreenAndScrollback() {
-        TODO("Not yet implemented")
-    }
-
     fun writeChar(char: Char) {
         screenContent[cursorState.y][cursorState.x] = Symbol(char, cursorState.attr)
+    }
+
+    internal fun insertChar(char: Char): Symbol? {
+        val row = cursorState.y
+        val col = cursorState.x
+
+        val lastSymbol = screenContent[row][width - 1]
+
+        for (c in width - 1 downTo col + 1) {
+            screenContent[row][c] = screenContent[row][c - 1]
+        }
+
+        screenContent[row][col] = Symbol(char, cursorState.attr)
+
+        return if (lastSymbol.char != ' ' || lastSymbol.attr != TextAttributes()) {
+            lastSymbol
+        } else {
+            null
+        }
     }
 
     internal fun scrollUp(): List<Symbol> {
@@ -52,15 +66,26 @@ class ScreenImpl(
         return topLine
     }
 
-    internal fun newLine(): List<Symbol>? {
-        cursorState.x = 0
-        return if (cursorState.y < height - 1) {
-            cursorState.y++
-            null
-        } else {
-            scrollUp()
+    internal fun scrollDown() {
+        for (row in height - 1 downTo 1) {
+            for (col in 0 until width) {
+                screenContent[row][col] = screenContent[row - 1][col]
+            }
+        }
+
+        for (col in 0 until width) {
+            screenContent[0][col] = Symbol(' ', TextAttributes())
         }
     }
+
+    internal fun moveCursorToNextLine() {
+        cursorState.x = 0
+        if (cursorState.y < height - 1) {
+            cursorState.y++
+        }
+    }
+
+    internal fun isAtBottomLine(): Boolean = cursorState.y >= height - 1
 
     internal fun getLineAsString(row: Int): String {
         if (row < 0 || row >= height) {
@@ -115,10 +140,6 @@ class ScreenImpl(
             sb.append("\n")
         }
         return sb.toString()
-    }
-
-    override fun getScreenAndScrollbackAsString(): String {
-        TODO("Not yet implemented")
     }
 
     override fun setAttribute(

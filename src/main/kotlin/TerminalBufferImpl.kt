@@ -9,7 +9,17 @@ class TerminalBufferImpl(
     private val scrollback = ScrollbackImpl(scrollbackSize)
 
     override fun clearScreen() = screen.clearScreen()
-    override fun clearScreenAndScrollback() = screen.clearScreenAndScrollback()
+    override fun getScreenAndScrollbackAsString(): String {
+        val sb = StringBuilder()
+        val scrollbackLines = scrollback.getActualSize()
+        for (row in 0 until scrollbackLines) {
+            sb.append(scrollback.getLineAsString(row))
+            sb.append("\n")
+        }
+        sb.append(screen.getScreenAsString())
+        return sb.toString()
+    }
+
     override fun clearLine() = screen.clearLine()
     override fun fillLine(char: Char) = screen.fillLine(char)
     override fun getCursorPosition() = screen.getCursorPosition()
@@ -19,7 +29,6 @@ class TerminalBufferImpl(
     override fun moveCursorLeft(cells: Int) = screen.moveCursorLeft(cells)
     override fun moveCursorRight(cells: Int) = screen.moveCursorRight(cells)
     override fun getScreenAsString() = screen.getScreenAsString()
-    override fun getScreenAndScrollbackAsString() = screen.getScreenAndScrollbackAsString()
     override fun setAttribute(foreground: Int, background: Int, styles: Set<String>) =
         screen.setAttribute(foreground, background, styles)
 
@@ -35,33 +44,68 @@ class TerminalBufferImpl(
     override fun pushLine(line: List<Symbol>) = scrollback.pushLine(line)
 
     override fun insertEmptyLine() {
-        TODO("Not yet implemented")
+        screen.scrollDown()
     }
 
     override fun writeText(text: String) {
         for (char in text) {
             if (char == '\n') {
-                val scrolledLine = screen.newLine()
-                if (scrolledLine != null) {
+                if (screen.isAtBottomLine()) {
+                    val scrolledLine = screen.scrollUp()
                     scrollback.pushLine(scrolledLine)
                 }
+                screen.moveCursorToNextLine()
             } else {
                 screen.writeChar(char)
-                val (x, y) = screen.getCursorPosition()
+                val (x, _) = screen.getCursorPosition()
                 if (x < width - 1) {
                     screen.moveCursorRight(1)
                 } else {
-                    val scrolledLine = screen.newLine()
-                    if (scrolledLine != null) {
+                    if (screen.isAtBottomLine()) {
+                        val scrolledLine = screen.scrollUp()
                         scrollback.pushLine(scrolledLine)
                     }
+                    screen.moveCursorToNextLine()
                 }
             }
         }
     }
 
     override fun insertText(text: String) {
-        TODO("Not yet implemented")
+        for (char in text) {
+            if (char == '\n') {
+                if (screen.isAtBottomLine()) {
+                    val scrolledLine = screen.scrollUp()
+                    scrollback.pushLine(scrolledLine)
+                }
+                screen.moveCursorToNextLine()
+            } else {
+                val overflow = screen.insertChar(char)
+                val (x, _) = screen.getCursorPosition()
+
+                if (x < width - 1) {
+                    screen.moveCursorRight(1)
+                } else {
+                    if (screen.isAtBottomLine()) {
+                        val scrolledLine = screen.scrollUp()
+                        scrollback.pushLine(scrolledLine)
+                    }
+                    screen.moveCursorToNextLine()
+                }
+
+                if (overflow != null) {
+                    val savedPos = screen.getCursorPosition()
+                    screen.setCursorPosition(0, savedPos.second)
+                    screen.insertChar(overflow.char)
+                    screen.setCursorPosition(savedPos.first, savedPos.second)
+                }
+            }
+        }
+    }
+
+    override fun clearScreenAndScrollback() {
+        screen.clearScreen()
+        scrollback.clear()
     }
 
 }

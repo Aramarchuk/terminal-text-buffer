@@ -9,7 +9,6 @@ interface Scrollback {
 
 interface Screen {
     fun clearScreen() // Clear the entire screen
-    fun clearScreenAndScrollback() // Clear the screen and scrollback
 
     fun clearLine() // Clear a line (equivalent to filling with spaces)
     fun fillLine(char: Char)
@@ -22,7 +21,6 @@ interface Screen {
     fun moveCursorRight(cells: Int)
 
     fun getScreenAsString(): String // Get entire screen content as string
-    fun getScreenAndScrollbackAsString(): String // Get entire screen+scrollback content as string
 
     fun setAttribute(foreground: Int, background: Int, styles: Set<String>)
 }
@@ -36,5 +34,7 @@ interface TerminalBuffer :
     fun writeText(text: String) // Write text on a line, overriding current content. Moves cursor.
     fun insertText(text: String) // Insert text on a line, possibly wrapping. Moves cursor.
 
+    fun clearScreenAndScrollback() // Clear the screen and scrollback
+    fun getScreenAndScrollbackAsString(): String // Get entire screen+scrollback content as string
 }
 

@@ -6,7 +6,12 @@ class ScrollbackImpl(
     private var scrollbackSize: Int
 ) : Scrollback {
     private val content: ArrayDeque<ArrayDeque<Symbol>> = ArrayDeque()
-    fun getScrollbackSize() = scrollbackSize
+
+    internal fun clear() {
+        content.clear()
+    }
+
+    internal fun getActualSize() = content.size
 
     override fun getCharAt(column: Int, row: Int): Char =
         content.getOrNull(row)
