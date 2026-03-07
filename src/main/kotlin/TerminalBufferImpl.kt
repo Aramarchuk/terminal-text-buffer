@@ -18,6 +18,14 @@ class TerminalBufferImpl(
         return sb.toString()
     }
 
+    override fun getAttributesAt(
+        column: Int,
+        row: Int
+    ): TextAttributes {
+        return if (row < height) screen.getAttributesAt(column, row)
+        else scrollback.getAttributesAt(column, row)
+    }
+
     override fun getLineAsString(row: Int): String {
         return if (row < height) {
             screen.getLineAsString(row)

@@ -35,7 +35,7 @@ class ScrollbackImpl(
         // Add the new line to the end of scrollback
         content.addLast(ArrayDeque(line))
 
-        // Remove oldest line if we exceed scrollback size
+        // Remove the oldest line if we exceed scrollback size
         if (content.size > scrollbackSize) {
             content.removeFirst()
         }

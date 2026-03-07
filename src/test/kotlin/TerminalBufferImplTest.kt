@@ -353,34 +353,34 @@ class TerminalBufferImplTest {
 //        assertEquals("X", line.substring(79), "Character should be at last position")
 //    }
 
-//    @Test
-//    @DisplayName("Should handle text attributes retrieval")
-//    fun testGetAttributesAt() {
-//        terminal.setCursorPosition(0, 0)
-//        terminal.setAttribute(255, 0, setOf())
-//        terminal.writeText("Test")
-//
-//        val attrs = terminal.getAttributesAt(0, 0)
-//        assertEquals(255, attrs.foreground, "Foreground color should match")
-//        assertEquals(0, attrs.background, "Background color should match")
-//    }
-//
-//    @Test
-//    @DisplayName("Should preserve attributes when writing text")
-//    fun testAttributePreservation() {
-//        terminal.setCursorPosition(0, 0)
-//        terminal.setAttribute(255, 128, setOf("bold"))
-//        terminal.writeText("Bold")
-//
-//        terminal.setAttribute(128, 255, setOf())
-//        terminal.writeText("Normal")
-//
-//        val attrs1 = terminal.getAttributesAt(0, 0)
-//        val attrs2 = terminal.getAttributesAt(4, 0)
-//
-//        assertEquals(255, attrs1.foreground, "First text should have first foreground")
-//        assertEquals(128, attrs2.foreground, "Second text should have second foreground")
-//    }
+    @Test
+    @DisplayName("Should handle text attributes retrieval")
+    fun testGetAttributesAt() {
+        terminal.setCursorPosition(0, 0)
+        terminal.setAttributes(TextAttributes(255, 0))
+        terminal.writeText("Test")
+
+        val attrs = terminal.getAttributesAt(0, 0)
+        assertEquals(255, attrs.fg, "Foreground color should match")
+        assertEquals(0, attrs.bg, "Background color should match")
+    }
+
+    @Test
+    @DisplayName("Should preserve attributes when writing text")
+    fun testAttributePreservation() {
+        terminal.setCursorPosition(0, 0)
+        terminal.setAttributes(TextAttributes(255, 158).withStyle(TextAttributes.BOLD))
+        terminal.writeText("Bold")
+
+        terminal.setAttributes(TextAttributes(128, 255))
+        terminal.writeText("Normal")
+
+        val attrs1 = terminal.getAttributesAt(0, 0)
+        val attrs2 = terminal.getAttributesAt(4, 0)
+
+        assertEquals(255, attrs1.fg, "First text should have first foreground")
+        assertEquals(128, attrs2.fg, "Second text should have second foreground")
+    }
 
     // ========== Small Terminal Tests ==========
 
