@@ -106,9 +106,9 @@ class TerminalBufferImpl(
 
                 if (overflow != null) {
                     val savedPos = screen.getCursorPosition()
-                    screen.setCursorPosition(0, savedPos.second)
+                    screen.setCursorPosition(0, savedPos.row)
                     screen.insertChar(overflow.char)
-                    screen.setCursorPosition(savedPos.first, savedPos.second)
+                    screen.setCursorPosition(savedPos.column, savedPos.row)
                 }
             }
         }

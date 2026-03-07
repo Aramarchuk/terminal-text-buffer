@@ -33,7 +33,7 @@ interface ScreenPublic {
     fun clearLine() // Clear a line (equivalent to filling with spaces)
     fun fillLine(char: Char)
 
-    fun getCursorPosition(): Pair<Int, Int> // (column, row)
+    fun getCursorPosition(): CursorPosition
     fun setCursorPosition(column: Int, row: Int)
     fun moveCursorUp(cells: Int)
     fun moveCursorDown(cells: Int)
