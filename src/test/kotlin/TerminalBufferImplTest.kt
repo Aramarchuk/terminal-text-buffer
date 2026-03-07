@@ -70,10 +70,10 @@ class TerminalBufferImplTest {
     @DisplayName("Should get and set cursor position")
     fun testCursorPosition() {
         terminal.setCursorPosition(10, 5)
-        val (col, row) = terminal.getCursorPosition()
+        val pos = terminal.getCursorPosition()
 
-        assertEquals(10, col, "Cursor column should be 10")
-        assertEquals(5, row, "Cursor row should be 5")
+        assertEquals(10, pos.column, "Cursor column should be 10")
+        assertEquals(5, pos.row, "Cursor row should be 5")
     }
 
     @Test
@@ -81,9 +81,9 @@ class TerminalBufferImplTest {
     fun testMoveCursorUp() {
         terminal.setCursorPosition(5, 10)
         terminal.moveCursorUp(3)
-        val (_, row) = terminal.getCursorPosition()
+        val pos = terminal.getCursorPosition()
 
-        assertEquals(7, row, "Cursor should move up 3 rows")
+        assertEquals(7, pos.row, "Cursor should move up 3 rows")
     }
 
     @Test
@@ -91,9 +91,9 @@ class TerminalBufferImplTest {
     fun testMoveCursorDown() {
         terminal.setCursorPosition(5, 5)
         terminal.moveCursorDown(3)
-        val (_, row) = terminal.getCursorPosition()
+        val pos = terminal.getCursorPosition()
 
-        assertEquals(8, row, "Cursor should move down 3 rows")
+        assertEquals(8, pos.row, "Cursor should move down 3 rows")
     }
 
     @Test
@@ -101,9 +101,9 @@ class TerminalBufferImplTest {
     fun testMoveCursorLeft() {
         terminal.setCursorPosition(10, 5)
         terminal.moveCursorLeft(4)
-        val (col, _) = terminal.getCursorPosition()
+        val pos = terminal.getCursorPosition()
 
-        assertEquals(6, col, "Cursor should move left 4 columns")
+        assertEquals(6, pos.column, "Cursor should move left 4 columns")
     }
 
     @Test
@@ -111,9 +111,9 @@ class TerminalBufferImplTest {
     fun testMoveCursorRight() {
         terminal.setCursorPosition(10, 5)
         terminal.moveCursorRight(4)
-        val (col, _) = terminal.getCursorPosition()
+        val pos = terminal.getCursorPosition()
 
-        assertEquals(14, col, "Cursor should move right 4 columns")
+        assertEquals(14, pos.column, "Cursor should move right 4 columns")
     }
 
     // ========== Screen Clearing Operations ==========
