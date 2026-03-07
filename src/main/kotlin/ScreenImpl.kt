@@ -1,10 +1,6 @@
 package io.github.aramarchuk.terminalbuffer
 
-data class TextAttributes(
-    val fg: Int = 7,
-    val bg: Int = 0,
-    val flags: Int = 0
-)
+
 
 data class CursorState(var x: Int, var y: Int, var attr: TextAttributes = TextAttributes())
 
@@ -88,7 +84,7 @@ class ScreenImpl(
     override fun isAtBottomLine(): Boolean = cursorState.y >= height - 1
 
     override fun getLineAsString(row: Int): String {
-        if (row < 0 || row >= height) {
+        if (row !in 0..<height) {
             error("Row $row out of bounds [0, $height)")
         }
         return screenContent[row].joinToString(separator = "") { it.char.toString() }.trimEnd()
@@ -142,12 +138,15 @@ class ScreenImpl(
         return sb.toString()
     }
 
-    override fun setAttribute(
-        foreground: Int,
-        background: Int,
-        styles: Set<String>
-    ) {
-        val flags = 0
-        cursorState.attr = TextAttributes(foreground, background, flags)
+    override fun setAttributes(attributes: TextAttributes) {
+        cursorState.attr = attributes
+    }
+
+    override fun getAttributes(): TextAttributes {
+        return cursorState.attr
+    }
+
+    override fun getAttributesAt(column: Int, row: Int): TextAttributes {
+        return screenContent[row][column].attr
     }
 }

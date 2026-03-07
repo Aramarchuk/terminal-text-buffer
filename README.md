@@ -22,8 +22,16 @@ A Kotlin implementation of a terminal text buffer with support for cursor operat
 ./gradlew run
 ```
 
+## Testing
+
+```bash
+./gradlew test
+```
+
+## Architecture Notes
+
 Tell em about numeration of buffer.
 Explain your decision about removing setSize functions.
 Splitting buffer to ScreenContent and Scrollback
 And about delegation problem!
-
+About idea about registration of listeners
