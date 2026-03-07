@@ -92,8 +92,8 @@ class ScreenImpl(
     override fun isAtBottomLine(): Boolean = cursorState.y >= height - 1
 
     override fun getLineAsString(row: Int): String {
-        if (row !in 0..<height) {
-            error("Row $row out of bounds [0, $height)")
+        if (row !in 0 until height) {
+            throw IndexOutOfBoundsException("Row $row out of bounds [0, $height)")
         }
         return screenContent[row].joinToString(separator = "") { it.char.toString() }.trimEnd()
     }
