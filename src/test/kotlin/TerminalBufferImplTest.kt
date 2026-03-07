@@ -418,5 +418,52 @@ class TerminalBufferImplTest {
         assertEquals(5, lines.size, "Should have 5 lines total")
         assertEquals("Line 0", lines[0], "First line should be in scrollback")
     }
-}
 
+    // ========== Indexing: screen vs scrollback ==========
+
+    @Test
+    @DisplayName("getCharAt and getAttributesAt return correct data for screen rows (0..height-1)")
+    fun testScreenIndexing() {
+        // Screen rows are 0..height-1.
+        // Write two distinguishable chars with different attributes on rows 0 and 1.
+        val attrRow0 = TextAttributes.withColors(TerminalColor.RED,   TerminalColor.BLACK)
+        val attrRow1 = TextAttributes.withColors(TerminalColor.GREEN, TerminalColor.BLACK)
+
+        terminal.setCursorPosition(0, 0)
+        terminal.setAttributes(attrRow0)
+        terminal.writeText("A")
+
+        terminal.setCursorPosition(0, 1)
+        terminal.setAttributes(attrRow1)
+        terminal.writeText("B")
+
+        assertEquals('A', terminal.getCharAt(0, 0), "row 0 should contain 'A'")
+        assertEquals(attrRow0, terminal.getAttributesAt(0, 0), "row 0 should carry RED foreground")
+
+        assertEquals('B', terminal.getCharAt(0, 1), "row 1 should contain 'B'")
+        assertEquals(attrRow1, terminal.getAttributesAt(0, 1), "row 1 should carry GREEN foreground")
+    }
+
+    @Test
+    @DisplayName("getCharAt and getAttributesAt return correct data for scrollback rows (height..height+scrollback-1)")
+    fun testScrollbackIndexing() {
+        // Use a tiny 3-row terminal so scrollback is easy to trigger.
+        // height = 3, so screen rows = 0, 1, 2.
+        // After writing 4 lines the first line is pushed to scrollback.
+        // Scrollback row 0 is accessible at combined index height + 0 = 3.
+        val smallTerminal = TerminalBufferImpl(10, 3, 100)
+
+        val scrolledAttr = TextAttributes.withColors(TerminalColor.MAGENTA, TerminalColor.BLACK)
+        smallTerminal.setCursorPosition(0, 0)
+        smallTerminal.setAttributes(scrolledAttr)
+        smallTerminal.writeText("X")
+        smallTerminal.setAttributes(TextAttributes.default())
+        smallTerminal.writeText("\nline1\nline2\n")  // three more lines push "X" into scrollback
+
+        // Scrollback row 0 lives at combined index `height` (= 3).
+        assertEquals('X', smallTerminal.getCharAt(0, 3),
+            "col 0 of scrollback row 0 should be 'X' (combined index = height + 0 = 3)")
+        assertEquals(scrolledAttr, smallTerminal.getAttributesAt(0, 3),
+            "scrollback row 0 should preserve the MAGENTA attribute set before writing 'X'")
+    }
+}

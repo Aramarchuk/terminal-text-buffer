@@ -1,7 +1,6 @@
 package io.github.aramarchuk.terminalbuffer
 
 
-
 data class CursorState(var x: Int, var y: Int, var attr: TextAttributes = TextAttributes.default())
 
 class ScreenImpl(
@@ -11,6 +10,15 @@ class ScreenImpl(
     private val cursorState: CursorState = CursorState(0, 0)
     private val screenContent: List<MutableList<Symbol>> = List(height) {
         MutableList(width) { Symbol(' ', TextAttributes.default()) }
+    }
+
+    override fun getCharAt(column: Int, row: Int): Char {
+        if (row !in 0 until height || column !in 0 until width) {
+            throw IndexOutOfBoundsException(
+                "Invalid screen coordinates: row=$row, column=$column (height=$height, width=$width)"
+            )
+        }
+        return screenContent[row][column].char
     }
 
     override fun clearScreen() {
@@ -147,6 +155,11 @@ class ScreenImpl(
     }
 
     override fun getAttributesAt(column: Int, row: Int): TextAttributes {
+        if (row !in 0 until height || column !in 0 until width) {
+            throw IndexOutOfBoundsException(
+                "Invalid screen coordinates: row=$row, column=$column (height=$height, width=$width)"
+            )
+        }
         return screenContent[row][column].attr
     }
 }

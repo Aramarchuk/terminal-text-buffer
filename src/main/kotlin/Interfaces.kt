@@ -8,7 +8,6 @@ interface ScreenInternal {
     fun moveCursorToNextLine()
     fun isAtBottomLine(): Boolean
     fun getLineAsString(row: Int): String
-    fun getAttributesAt(column: Int, row: Int): TextAttributes
 }
 interface ScrollbackPublic {
     fun getCharAt(column: Int, row: Int): Char // Get character at position (from screen and scrollback)
@@ -25,6 +24,8 @@ interface ScrollbackInternal {
 interface Scrollback: ScrollbackPublic, ScrollbackInternal
 
 interface ScreenPublic {
+    fun getCharAt(column: Int, row: Int): Char
+
     fun clearScreen() // Clear the entire screen
 
     fun clearLine() // Clear a line (equivalent to filling with spaces)
@@ -40,6 +41,7 @@ interface ScreenPublic {
     fun getScreenAsString(): String // Get entire screen content as string
     fun getLineAsString(row: Int): String
 
+    fun getAttributesAt(column: Int, row: Int): TextAttributes
     fun setAttributes(attributes: TextAttributes)
     fun getAttributes(): TextAttributes
 }
@@ -58,5 +60,6 @@ interface TerminalBuffer :
     fun clearScreenAndScrollback() // Clear the screen and scrollback
     fun getScreenAndScrollbackAsString(): String // Get entire screen+scrollback content as string
     override fun getAttributesAt(column: Int, row: Int): TextAttributes
+    override fun getCharAt(column: Int, row: Int): Char
 }
 
