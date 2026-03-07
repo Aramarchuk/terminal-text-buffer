@@ -9,6 +9,7 @@ class ScrollbackImpl(
 ) : Scrollback {
     private val content: ArrayDeque<Line> = ArrayDeque()
 
+    /** Maps public scrollback row (0 = newest) to internal deque order (0 = oldest). */
     private fun toInternalRow(publicRow: Int): Int {
         if (publicRow !in 0 until content.size) {
             error("Out of bounds")
