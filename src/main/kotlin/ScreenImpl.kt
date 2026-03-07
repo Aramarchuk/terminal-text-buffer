@@ -1,13 +1,15 @@
 package io.github.aramarchuk.terminalbuffer
 
 
-data class CursorState(var x: Int, var y: Int, var attr: TextAttributes = TextAttributes.default())
+data class CursorPosition(val column: Int, val row: Int)
+
+data class CursorState(var position: CursorPosition = CursorPosition(0, 0), var attr: TextAttributes = TextAttributes.default())
 
 class ScreenImpl(
     private var width: Int,
     private var height: Int,
 ) : Screen {
-    private val cursorState: CursorState = CursorState(0, 0)
+    private val cursorState: CursorState = CursorState()
     private val screenContent: List<Line> = List(height) {
         Line(MutableList(width) { Symbol(' ', TextAttributes.default()) }, wrapped = false)
     }
@@ -28,17 +30,16 @@ class ScreenImpl(
             }
             screenContent[row].wrapped = false
         }
-        cursorState.x = 0
-        cursorState.y = 0
+        cursorState.position = CursorPosition(0, 0)
     }
 
     override fun writeChar(char: Char) {
-        screenContent[cursorState.y].symbols[cursorState.x] = Symbol(char, cursorState.attr)
+        screenContent[cursorState.position.row].symbols[cursorState.position.column] = Symbol(char, cursorState.attr)
     }
 
     override fun insertChar(char: Char): Symbol? {
-        val row = cursorState.y
-        val col = cursorState.x
+        val row = cursorState.position.row
+        val col = cursorState.position.column
 
         val lastSymbol = screenContent[row].symbols[width - 1]
 
@@ -88,14 +89,14 @@ class ScreenImpl(
     }
 
     override fun moveCursorToNextLine(wrapped: Boolean) {
-        cursorState.x = 0
-        if (cursorState.y < height - 1) {
-            cursorState.y++
+        cursorState.position = cursorState.position.copy(column = 0)
+        if (cursorState.position.row < height - 1) {
+            cursorState.position = cursorState.position.copy(row = cursorState.position.row + 1)
         }
-        screenContent[cursorState.y].wrapped = wrapped
+        screenContent[cursorState.position.row].wrapped = wrapped
     }
 
-    override fun isAtBottomLine(): Boolean = cursorState.y >= height - 1
+    override fun isAtBottomLine(): Boolean = cursorState.position.row >= height - 1
 
     override fun isLineWrapped(row: Int): Boolean {
         if (row !in 0 until height) {
@@ -112,42 +113,41 @@ class ScreenImpl(
     }
 
     override fun fillLine(char: Char) {
-        val row = cursorState.y
+        val row = cursorState.position.row
         for (col in 0 until width) {
             screenContent[row].symbols[col] = Symbol(char, cursorState.attr)
         }
     }
 
     override fun clearLine() {
-        val row = cursorState.y
+        val row = cursorState.position.row
         for (col in 0 until width) {
             screenContent[row].symbols[col] = Symbol(' ', TextAttributes.default())
         }
     }
 
-    override fun getCursorPosition(): Pair<Int, Int> {
-        return Pair(cursorState.x, cursorState.y)
+    override fun getCursorPosition(): CursorPosition {
+        return cursorState.position
     }
 
     override fun setCursorPosition(column: Int, row: Int) {
-        cursorState.x = column
-        cursorState.y = row
+        cursorState.position = CursorPosition(column, row)
     }
 
     override fun moveCursorUp(cells: Int) {
-        cursorState.y = maxOf(0, cursorState.y - cells)
+        cursorState.position = cursorState.position.copy(row = maxOf(0, cursorState.position.row - cells))
     }
 
     override fun moveCursorDown(cells: Int) {
-        cursorState.y = minOf(height - 1, cursorState.y + cells)
+        cursorState.position = cursorState.position.copy(row = minOf(height - 1, cursorState.position.row + cells))
     }
 
     override fun moveCursorLeft(cells: Int) {
-        cursorState.x = maxOf(0, cursorState.x - cells)
+        cursorState.position = cursorState.position.copy(column = maxOf(0, cursorState.position.column - cells))
     }
 
     override fun moveCursorRight(cells: Int) {
-        cursorState.x = minOf(width - 1, cursorState.x + cells)
+        cursorState.position = cursorState.position.copy(column = minOf(width - 1, cursorState.position.column + cells))
     }
 
     override fun getScreenAsString(): String {

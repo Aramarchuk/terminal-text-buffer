@@ -29,9 +29,9 @@ class ScreenImplTest {
     @DisplayName("Should handle cursor movement")
     fun testCursorPosition() {
         terminal.setCursorPosition(5, 5)
-        val (x, y) = terminal.getCursorPosition()
-        assertEquals(5, x, "Cursor column should be 5")
-        assertEquals(5, y, "Cursor row should be 5")
+        val pos = terminal.getCursorPosition()
+        assertEquals(5, pos.column, "Cursor column should be 5")
+        assertEquals(5, pos.row, "Cursor row should be 5")
     }
 
     @Test
