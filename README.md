@@ -56,7 +56,6 @@ println(terminal.getScreenAsString()) // oldest -> newest
 ```
 
 ## Architecture Notes
-
 #### Buffer Management
 I decided to split buffer management between Screen and Scrollback, since they have different requirements.
 
@@ -79,3 +78,15 @@ Some terminals, such as tmux, allow multiple screens to display and control the 
 
 #### Cursor
 At first it seems natural to model the Cursor as a separate object. In practice, however, it depends entirely on the Screen: it only exists within a screen and each screen can have only one cursor. Because of that, it makes more sense to treat the cursor as a part of the Screen rather than as an independent component.
+
+## Drawbacks
+#### Mutability
+For the sake of a unified interface, in my implementation the Scrollback is represented as MutableLists, just like the Screen. This is not an ideal solution, but I believe it can be improved later, possibly by using Kotlin’s in/out variance mechanisms.
+
+#### Enums
+As far as I know, enums in the JVM are implemented as objects, so storing them may require more memory than primitive values. Because of that, I'm not entirely sure how much memory I actually save by representing symbol styles as a set of bit flags instead of enums. At least now it's save and incapsulated.
+
+#### Scrolling
+I decided that the user should not be able to actually "scroll" the screen itself. Allowing this would introduce several ambiguities. For example, what exactly is the screen when the user has scrolled up? Should it still be modifiable?
+
+Instead, all scrollback content remains accessible through the getLineAsString function, which uses the same interface as access to the screen.
