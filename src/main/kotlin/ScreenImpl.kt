@@ -92,9 +92,7 @@ class ScreenImpl(
         if (cursorState.y < height - 1) {
             cursorState.y++
         }
-        if (wrapped) {
-            screenContent[cursorState.y].wrapped = true
-        }
+        screenContent[cursorState.y].wrapped = wrapped
     }
 
     override fun isAtBottomLine(): Boolean = cursorState.y >= height - 1
