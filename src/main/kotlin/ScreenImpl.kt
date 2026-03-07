@@ -2,7 +2,7 @@ package io.github.aramarchuk.terminalbuffer
 
 
 
-data class CursorState(var x: Int, var y: Int, var attr: TextAttributes = TextAttributes())
+data class CursorState(var x: Int, var y: Int, var attr: TextAttributes = TextAttributes.default())
 
 class ScreenImpl(
     private var width: Int,
@@ -10,13 +10,13 @@ class ScreenImpl(
 ) : Screen {
     private val cursorState: CursorState = CursorState(0, 0)
     private val screenContent: List<MutableList<Symbol>> = List(height) {
-        MutableList(width) { Symbol(' ', TextAttributes()) }
+        MutableList(width) { Symbol(' ', TextAttributes.default()) }
     }
 
     override fun clearScreen() {
         for (row in 0 until height) {
             for (col in 0 until width) {
-                screenContent[row][col] = Symbol(' ', TextAttributes())
+                screenContent[row][col] = Symbol(' ', TextAttributes.default())
             }
         }
         cursorState.x = 0
@@ -39,7 +39,7 @@ class ScreenImpl(
 
         screenContent[row][col] = Symbol(char, cursorState.attr)
 
-        return if (lastSymbol.char != ' ' || lastSymbol.attr != TextAttributes()) {
+        return if (lastSymbol.char != ' ' || lastSymbol.attr != TextAttributes.default()) {
             lastSymbol
         } else {
             null
@@ -56,7 +56,7 @@ class ScreenImpl(
         }
 
         for (col in 0 until width) {
-            screenContent[height - 1][col] = Symbol(' ', TextAttributes())
+            screenContent[height - 1][col] = Symbol(' ', TextAttributes.default())
         }
 
         return topLine
@@ -70,7 +70,7 @@ class ScreenImpl(
         }
 
         for (col in 0 until width) {
-            screenContent[0][col] = Symbol(' ', TextAttributes())
+            screenContent[0][col] = Symbol(' ', TextAttributes.default())
         }
     }
 
@@ -100,7 +100,7 @@ class ScreenImpl(
     override fun clearLine() {
         val row = cursorState.y
         for (col in 0 until width) {
-            screenContent[row][col] = Symbol(' ', TextAttributes())
+            screenContent[row][col] = Symbol(' ', TextAttributes.default())
         }
     }
 
