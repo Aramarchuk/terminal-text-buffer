@@ -466,4 +466,48 @@ class TerminalBufferImplTest {
         assertEquals(scrolledAttr, smallTerminal.getAttributesAt(0, 3),
             "scrollback row 0 should preserve the MAGENTA attribute set before writing 'X'")
     }
+
+    // ========== Line Wrapping ==========
+
+    @Test
+    @DisplayName("Explicit newline produces non-wrapped line, overflow produces wrapped line")
+    fun testWrappedVsNewline() {
+        // width=5: "Hello" fills row 0 exactly → cursor moves to row 1 with wrapped=true
+        //          "\n" then moves to row 2 with wrapped=false
+        val t = TerminalBufferImpl(5, 10, 100)
+        t.writeText("Hello\n")  // row 0 filled by wrap, row 1 starts as wrapped; then \n moves to row 2
+
+        // After "Hello" (5 chars) cursor is at col 4 (last col), writeChar puts 'o' there,
+        // then moveCursorToNextLine(wrapped=true) → row 1 is wrapped
+        // Then '\n' → moveCursorToNextLine(wrapped=false) → row 2 is NOT wrapped
+        assertEquals(true,  t.isLineWrapped(1), "Row 1 should be wrapped (text overflow from row 0)")
+        assertEquals(false, t.isLineWrapped(2), "Row 2 should NOT be wrapped (explicit newline)")
+    }
+
+    @Test
+    @DisplayName("Wrapped flag is false for lines ending with explicit newline")
+    fun testNoWrapOnExplicitNewlines() {
+        val t = TerminalBufferImpl(20, 10, 100)
+        t.writeText("Hi\nWorld\nFoo\n")
+
+        // All lines after explicit '\n' must have wrapped=false
+        for (row in 1..3) {
+            assertEquals(false, t.isLineWrapped(row), "Row $row should not be wrapped after explicit newline")
+        }
+    }
+
+    @Test
+    @DisplayName("Wrapped flag is preserved when a line scrolls from screen into scrollback")
+    fun testWrappedFlagSurvivesScrollIntoScrollback() {
+        val t = TerminalBufferImpl(5, 3, 100)
+        t.writeText("Hello\n\n\n\n")
+
+        // scrollback[0] = original row 0 (start of "Hello", wrapped=false) → combined index 3
+        assertEquals(false, t.isLineWrapped(3),
+            "Scrollback row 0 (original row 0, start of text) should NOT be wrapped")
+
+        // scrollback[1] = original row 1 (wrap continuation of "Hello", wrapped=true) → combined index 4
+        assertEquals(true, t.isLineWrapped(4),
+            "Scrollback row 1 (original row 1, wrap continuation) should be wrapped")
+    }
 }
