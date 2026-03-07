@@ -9,18 +9,33 @@ class ScreenImpl(
     private var width: Int,
     private var height: Int,
 ) : Screen {
-    private val cursorState: CursorState = CursorState()
+    private val cursorState: CursorState = CursorState(position = CursorPosition(0, height - 1))
     private val screenContent: List<Line> = List(height) {
         Line(MutableList(width) { Symbol(' ', TextAttributes.default()) }, wrapped = false)
     }
 
+    private fun toInternalRow(publicRow: Int): Int {
+        if (publicRow !in 0 until height) {
+            throw IndexOutOfBoundsException("Row $publicRow out of bounds [0, $height)")
+        }
+        return height - 1 - publicRow
+    }
+
+    private fun toPublicRow(internalRow: Int): Int {
+        if (internalRow !in 0 until height) {
+            throw IndexOutOfBoundsException("Row $internalRow out of bounds [0, $height)")
+        }
+        return height - 1 - internalRow
+    }
+
     override fun getCharAt(column: Int, row: Int): Char {
-        if (row !in 0 until height || column !in 0 until width) {
+        if (column !in 0 until width) {
             throw IndexOutOfBoundsException(
                 "Invalid screen coordinates: row=$row, column=$column (height=$height, width=$width)"
             )
         }
-        return screenContent[row].symbols[column].char
+        val internalRow = toInternalRow(row)
+        return screenContent[internalRow].symbols[column].char
     }
 
     override fun clearScreen() {
@@ -30,7 +45,7 @@ class ScreenImpl(
             }
             screenContent[row].wrapped = false
         }
-        cursorState.position = CursorPosition(0, 0)
+        cursorState.position = CursorPosition(0, height - 1)
     }
 
     override fun writeChar(char: Char) {
@@ -99,17 +114,11 @@ class ScreenImpl(
     override fun isAtBottomLine(): Boolean = cursorState.position.row >= height - 1
 
     override fun isLineWrapped(row: Int): Boolean {
-        if (row !in 0 until height) {
-            throw IndexOutOfBoundsException("Row $row out of bounds [0, $height)")
-        }
-        return screenContent[row].wrapped
+        return screenContent[toInternalRow(row)].wrapped
     }
 
     override fun getLineAsString(row: Int): String {
-        if (row !in 0 until height) {
-            throw IndexOutOfBoundsException("Row $row out of bounds [0, $height)")
-        }
-        return screenContent[row].symbols.joinToString(separator = "") { it.char.toString() }.trimEnd()
+        return screenContent[toInternalRow(row)].symbols.joinToString(separator = "") { it.char.toString() }.trimEnd()
     }
 
     override fun fillLine(char: Char) {
@@ -127,19 +136,23 @@ class ScreenImpl(
     }
 
     override fun getCursorPosition(): CursorPosition {
-        return cursorState.position
+        return CursorPosition(cursorState.position.column, toPublicRow(cursorState.position.row))
     }
 
     override fun setCursorPosition(column: Int, row: Int) {
-        cursorState.position = CursorPosition(column, row)
+        cursorState.position = CursorPosition(column, toInternalRow(row))
     }
 
     override fun moveCursorUp(cells: Int) {
-        cursorState.position = cursorState.position.copy(row = maxOf(0, cursorState.position.row - cells))
+        val publicRow = toPublicRow(cursorState.position.row)
+        val newPublicRow = maxOf(0, publicRow - cells)
+        cursorState.position = cursorState.position.copy(row = toInternalRow(newPublicRow))
     }
 
     override fun moveCursorDown(cells: Int) {
-        cursorState.position = cursorState.position.copy(row = minOf(height - 1, cursorState.position.row + cells))
+        val publicRow = toPublicRow(cursorState.position.row)
+        val newPublicRow = minOf(height - 1, publicRow + cells)
+        cursorState.position = cursorState.position.copy(row = toInternalRow(newPublicRow))
     }
 
     override fun moveCursorLeft(cells: Int) {
@@ -152,7 +165,7 @@ class ScreenImpl(
 
     override fun getScreenAsString(): String {
         val sb = StringBuilder()
-        for (row in 0 until height) {
+        for (row in height - 1 downTo 0) {
             sb.append(getLineAsString(row))
             sb.append("\n")
         }
@@ -168,11 +181,11 @@ class ScreenImpl(
     }
 
     override fun getAttributesAt(column: Int, row: Int): TextAttributes {
-        if (row !in 0 until height || column !in 0 until width) {
+        if (column !in 0 until width) {
             throw IndexOutOfBoundsException(
                 "Invalid screen coordinates: row=$row, column=$column (height=$height, width=$width)"
             )
         }
-        return screenContent[row].symbols[column].attr
+        return screenContent[toInternalRow(row)].symbols[column].attr
     }
 }
