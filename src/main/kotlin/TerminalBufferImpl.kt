@@ -10,11 +10,14 @@ class TerminalBufferImpl(
     override fun getScreenAndScrollbackAsString(): String {
         val sb = StringBuilder()
         val scrollbackLines = scrollback.getActualSize()
-        for (row in 0 until scrollbackLines) {
+        for (row in scrollbackLines - 1 downTo 0) {
             sb.append(scrollback.getLineAsString(row))
             sb.append("\n")
         }
-        sb.append(screen.getScreenAsString())
+        for (row in height - 1 downTo 0) {
+            sb.append(screen.getLineAsString(row))
+            sb.append("\n")
+        }
         return sb.toString()
     }
 
@@ -42,7 +45,7 @@ class TerminalBufferImpl(
         return if (row < height) {
             screen.getCharAt(column, row)
         } else {
-            scrollback.getCharAt(column, row-height)
+            scrollback.getCharAt(column, row - height)
         }
     }
 
@@ -68,7 +71,7 @@ class TerminalBufferImpl(
                 screen.moveCursorToNextLine(wrapped = false)
             } else {
                 screen.writeChar(char)
-                val (x, _) = screen.getCursorPosition()
+                val x = screen.getCursorPosition().column
                 if (x < width - 1) {
                     screen.moveCursorRight(1)
                 } else {

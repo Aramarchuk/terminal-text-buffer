@@ -9,32 +9,46 @@ class ScrollbackImpl(
 ) : Scrollback {
     private val content: ArrayDeque<Line> = ArrayDeque()
 
+    private fun toInternalRow(publicRow: Int): Int {
+        if (publicRow !in 0 until content.size) {
+            error("Out of bounds")
+        }
+        return content.size - 1 - publicRow
+    }
+
     override fun clear() {
         content.clear()
     }
 
     override fun getActualSize() = content.size
 
-    override fun getCharAt(column: Int, row: Int): Char =
-        content.getOrNull(row)
+    override fun getCharAt(column: Int, row: Int): Char {
+        val internalRow = toInternalRow(row)
+        return content.getOrNull(internalRow)
             ?.symbols?.getOrNull(column)
             ?.char ?: error("Out of bounds")
+    }
 
     override fun getAttributesAt(
         column: Int,
         row: Int
-    ): TextAttributes =
-        content.getOrNull(row)
+    ): TextAttributes {
+        val internalRow = toInternalRow(row)
+        return content.getOrNull(internalRow)
             ?.symbols?.getOrNull(column)?.attr ?: error("Out of bounds")
+    }
 
-    override fun getLineAsString(row: Int): String =
-        content.getOrNull(row)
+    override fun getLineAsString(row: Int): String {
+        val internalRow = toInternalRow(row)
+        return content.getOrNull(internalRow)
             ?.symbols?.joinToString(separator = "") { it.char.toString() }
             ?.trimEnd()
             ?: error("Out of bounds")
+    }
 
-    override fun isLineWrapped(row: Int): Boolean =
-        content.getOrNull(row)?.wrapped ?: error("Out of bounds")
+    override fun isLineWrapped(row: Int): Boolean {
+        return content.getOrNull(toInternalRow(row))?.wrapped ?: error("Out of bounds")
+    }
 
     override fun pushLine(line: Line) {
         content.addLast(line)
