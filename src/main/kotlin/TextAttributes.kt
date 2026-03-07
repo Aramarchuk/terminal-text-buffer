@@ -3,98 +3,97 @@ package io.github.aramarchuk.terminalbuffer
 /**
  * Text attributes for terminal characters.
  *
- * @property fg Foreground color (0-255)
- * @property bg Background color (0-255)
- * @property flags Bit flags for text styles (internal representation)
+ * Instances can only be created through [default] and [withColors] factory
+ * functions, and modified through the provided `with*` / `without*` methods.
+ *
+ * Colors are expressed as [TerminalColor] enum values (standard 16-color palette).
+ * Styles are expressed as [StyleFlag] enum values — no raw bit manipulation is exposed.
+ *
+ * @property fg Foreground color
+ * @property bg Background color
  */
-data class TextAttributes(
-    val fg: Int = 7,
-    val bg: Int = 0,
-    val flags: Int = 0
+class TextAttributes private constructor(
+    val fg: TerminalColor,
+    val bg: TerminalColor,
+    private val flags: Int
 ) {
     companion object {
-        // Bit flags for text styles
-        const val BOLD = 1 shl 0       // 0b00000001
-        const val ITALIC = 1 shl 1     // 0b00000010
-        const val UNDERLINE = 1 shl 2  // 0b00000100
-        const val STRIKETHROUGH = 1 shl 3 // 0b00001000
+        /**
+         * Create [TextAttributes] with default colors (fg=WHITE, bg=BLACK) and no styles.
+         */
+        fun default() = TextAttributes(TerminalColor.WHITE, TerminalColor.BLACK, 0)
 
         /**
-         * Create TextAttributes with default colors and no styles.
+         * Create [TextAttributes] with specified colors and no styles.
          */
-        fun default() = TextAttributes()
-
-        /**
-         * Create TextAttributes with specified colors.
-         */
-        fun withColors(foreground: Int = 7, background: Int = 0) =
-            TextAttributes(fg = foreground, bg = background)
+        fun withColors(
+            foreground: TerminalColor = TerminalColor.WHITE,
+            background: TerminalColor = TerminalColor.BLACK
+        ) = TextAttributes(foreground, background, 0)
     }
 
-    /**
-     * Check if a specific style is set.
-     */
-    fun hasStyle(style: Int): Boolean = (flags and style) != 0
+    // ── Style queries ─────────────────────────────────────────────────────────
 
-    /**
-     * Check if bold style is set.
-     */
-    val isBold: Boolean get() = hasStyle(BOLD)
+    /** Returns `true` if the given [style] flag is set. */
+    fun hasStyle(style: StyleFlag): Boolean = (flags and style.bit) != 0
 
-    /**
-     * Check if italic style is set.
-     */
-    val isItalic: Boolean get() = hasStyle(ITALIC)
+    val isBold: Boolean          get() = hasStyle(StyleFlag.BOLD)
+    val isItalic: Boolean        get() = hasStyle(StyleFlag.ITALIC)
+    val isUnderline: Boolean     get() = hasStyle(StyleFlag.UNDERLINE)
+    val isStrikethrough: Boolean get() = hasStyle(StyleFlag.STRIKETHROUGH)
 
-    /**
-     * Check if underline style is set.
-     */
-    val isUnderline: Boolean get() = hasStyle(UNDERLINE)
+    // ── Style mutations ───────────────────────────────────────────────────────
 
-    /**
-     * Check if strikethrough style is set.
-     */
-    val isStrikethrough: Boolean get() = hasStyle(STRIKETHROUGH)
+    /** Return a copy with [style] added. */
+    fun withStyle(style: StyleFlag) =
+        TextAttributes(fg, bg, flags or style.bit)
 
-    /**
-     * Add a style flag to the current attributes.
-     */
-    fun withStyle(style: Int): TextAttributes =
-        copy(flags = flags or style)
+    /** Return a copy with all given [styles] added. */
+    fun withStyles(vararg styles: StyleFlag) =
+        TextAttributes(fg, bg, styles.fold(flags) { acc, s -> acc or s.bit })
 
-    /**
-     * Add multiple style flags to the current attributes.
-     */
-    fun withStyles(vararg styles: Int): TextAttributes =
-        copy(flags = styles.fold(flags) { acc, style -> acc or style })
+    /** Return a copy with [style] removed. */
+    fun withoutStyle(style: StyleFlag) =
+        TextAttributes(fg, bg, flags and style.bit.inv())
 
-    /**
-     * Remove a style flag from the current attributes.
-     */
-    fun withoutStyle(style: Int): TextAttributes =
-        copy(flags = flags and style.inv())
+    /** Return a copy with all given [styles] removed. */
+    fun withoutStyles(vararg styles: StyleFlag) =
+        TextAttributes(fg, bg, styles.fold(flags) { acc, s -> acc and s.bit.inv() })
 
-    /**
-     * Remove multiple style flags from the current attributes.
-     */
-    fun withoutStyles(vararg styles: Int): TextAttributes =
-        copy(flags = styles.fold(flags) { acc, style -> acc and style.inv() })
+    // ── Color mutations ───────────────────────────────────────────────────────
 
-    /**
-     * Change foreground color.
-     */
-    fun withForeground(color: Int): TextAttributes =
-        copy(fg = color)
+    /** Return a copy with the foreground color changed. */
+    fun withForeground(color: TerminalColor) = TextAttributes(color, bg, flags)
 
-    /**
-     * Change background color.
-     */
-    fun withBackground(color: Int): TextAttributes =
-        copy(bg = color)
+    /** Return a copy with the background color changed. */
+    fun withBackground(color: TerminalColor) = TextAttributes(fg, color, flags)
 
-    /**
-     * Change both colors.
-     */
-    fun withColors(foreground: Int, background: Int): TextAttributes =
-        copy(fg = foreground, bg = background)
+    /** Return a copy with both colors changed. */
+    fun withColors(foreground: TerminalColor, background: TerminalColor) =
+        TextAttributes(foreground, background, flags)
+
+    // ── equals / hashCode / toString ─────────────────────────────────────────
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TextAttributes) return false
+        return fg == other.fg && bg == other.bg && flags == other.flags
+    }
+
+    override fun hashCode(): Int {
+        var result = fg.hashCode()
+        result = 31 * result + bg.hashCode()
+        result = 31 * result + flags
+        return result
+    }
+
+    override fun toString(): String {
+        val styles = buildList {
+            if (isBold)          add("BOLD")
+            if (isItalic)        add("ITALIC")
+            if (isUnderline)     add("UNDERLINE")
+            if (isStrikethrough) add("STRIKETHROUGH")
+        }.joinToString("|").ifEmpty { "NONE" }
+        return "TextAttributes(fg=$fg, bg=$bg, styles=$styles)"
+    }
 }

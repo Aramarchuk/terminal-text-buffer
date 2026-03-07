@@ -357,29 +357,32 @@ class TerminalBufferImplTest {
     @DisplayName("Should handle text attributes retrieval")
     fun testGetAttributesAt() {
         terminal.setCursorPosition(0, 0)
-        terminal.setAttributes(TextAttributes(255, 0))
+        terminal.setAttributes(TextAttributes.withColors(TerminalColor.RED, TerminalColor.BLACK))
         terminal.writeText("Test")
 
         val attrs = terminal.getAttributesAt(0, 0)
-        assertEquals(255, attrs.fg, "Foreground color should match")
-        assertEquals(0, attrs.bg, "Background color should match")
+        assertEquals(TerminalColor.RED, attrs.fg, "Foreground color should match")
+        assertEquals(TerminalColor.BLACK, attrs.bg, "Background color should match")
     }
 
     @Test
     @DisplayName("Should preserve attributes when writing text")
     fun testAttributePreservation() {
         terminal.setCursorPosition(0, 0)
-        terminal.setAttributes(TextAttributes(255, 158).withStyle(TextAttributes.BOLD))
+        terminal.setAttributes(
+            TextAttributes.withColors(TerminalColor.RED, TerminalColor.BLACK)
+                .withStyle(StyleFlag.BOLD)
+        )
         terminal.writeText("Bold")
 
-        terminal.setAttributes(TextAttributes(128, 255))
+        terminal.setAttributes(TextAttributes.withColors(TerminalColor.GREEN, TerminalColor.BLUE))
         terminal.writeText("Normal")
 
         val attrs1 = terminal.getAttributesAt(0, 0)
         val attrs2 = terminal.getAttributesAt(4, 0)
 
-        assertEquals(255, attrs1.fg, "First text should have first foreground")
-        assertEquals(128, attrs2.fg, "Second text should have second foreground")
+        assertEquals(TerminalColor.RED,   attrs1.fg, "First text should have first foreground")
+        assertEquals(TerminalColor.GREEN, attrs2.fg, "Second text should have second foreground")
     }
 
     // ========== Small Terminal Tests ==========
