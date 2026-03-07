@@ -46,6 +46,14 @@ class TerminalBufferImpl(
         }
     }
 
+    override fun isLineWrapped(row: Int): Boolean {
+        return if (row < height) {
+            screen.isLineWrapped(row)
+        } else {
+            scrollback.isLineWrapped(row - height)
+        }
+    }
+
     override fun insertEmptyLine() {
         screen.scrollDown()
     }
@@ -57,7 +65,7 @@ class TerminalBufferImpl(
                     val scrolledLine = screen.scrollUp()
                     scrollback.pushLine(scrolledLine)
                 }
-                screen.moveCursorToNextLine()
+                screen.moveCursorToNextLine(wrapped = false)
             } else {
                 screen.writeChar(char)
                 val (x, _) = screen.getCursorPosition()
@@ -68,7 +76,7 @@ class TerminalBufferImpl(
                         val scrolledLine = screen.scrollUp()
                         scrollback.pushLine(scrolledLine)
                     }
-                    screen.moveCursorToNextLine()
+                    screen.moveCursorToNextLine(wrapped = true)
                 }
             }
         }
@@ -81,7 +89,7 @@ class TerminalBufferImpl(
                     val scrolledLine = screen.scrollUp()
                     scrollback.pushLine(scrolledLine)
                 }
-                screen.moveCursorToNextLine()
+                screen.moveCursorToNextLine(wrapped = false)
             } else {
                 val overflow = screen.insertChar(char)
                 val (x, _) = screen.getCursorPosition()
@@ -93,7 +101,7 @@ class TerminalBufferImpl(
                         val scrolledLine = screen.scrollUp()
                         scrollback.pushLine(scrolledLine)
                     }
-                    screen.moveCursorToNextLine()
+                    screen.moveCursorToNextLine(wrapped = true)
                 }
 
                 if (overflow != null) {
@@ -110,5 +118,4 @@ class TerminalBufferImpl(
         screen.clearScreen()
         scrollback.clear()
     }
-
 }

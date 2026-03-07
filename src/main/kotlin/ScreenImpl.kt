@@ -8,8 +8,8 @@ class ScreenImpl(
     private var height: Int,
 ) : Screen {
     private val cursorState: CursorState = CursorState(0, 0)
-    private val screenContent: List<MutableList<Symbol>> = List(height) {
-        MutableList(width) { Symbol(' ', TextAttributes.default()) }
+    private val screenContent: List<Line> = List(height) {
+        Line(MutableList(width) { Symbol(' ', TextAttributes.default()) }, wrapped = false)
     }
 
     override fun getCharAt(column: Int, row: Int): Char {
@@ -18,34 +18,35 @@ class ScreenImpl(
                 "Invalid screen coordinates: row=$row, column=$column (height=$height, width=$width)"
             )
         }
-        return screenContent[row][column].char
+        return screenContent[row].symbols[column].char
     }
 
     override fun clearScreen() {
         for (row in 0 until height) {
             for (col in 0 until width) {
-                screenContent[row][col] = Symbol(' ', TextAttributes.default())
+                screenContent[row].symbols[col] = Symbol(' ', TextAttributes.default())
             }
+            screenContent[row].wrapped = false
         }
         cursorState.x = 0
         cursorState.y = 0
     }
 
     override fun writeChar(char: Char) {
-        screenContent[cursorState.y][cursorState.x] = Symbol(char, cursorState.attr)
+        screenContent[cursorState.y].symbols[cursorState.x] = Symbol(char, cursorState.attr)
     }
 
     override fun insertChar(char: Char): Symbol? {
         val row = cursorState.y
         val col = cursorState.x
 
-        val lastSymbol = screenContent[row][width - 1]
+        val lastSymbol = screenContent[row].symbols[width - 1]
 
         for (c in width - 1 downTo col + 1) {
-            screenContent[row][c] = screenContent[row][c - 1]
+            screenContent[row].symbols[c] = screenContent[row].symbols[c - 1]
         }
 
-        screenContent[row][col] = Symbol(char, cursorState.attr)
+        screenContent[row].symbols[col] = Symbol(char, cursorState.attr)
 
         return if (lastSymbol.char != ' ' || lastSymbol.attr != TextAttributes.default()) {
             lastSymbol
@@ -54,18 +55,20 @@ class ScreenImpl(
         }
     }
 
-    override fun scrollUp(): List<Symbol> {
-        val topLine = screenContent[0].toList()
+    override fun scrollUp(): Line {
+        val topLine = Line(screenContent[0].symbols.toMutableList(), screenContent[0].wrapped)
 
         for (row in 0 until height - 1) {
             for (col in 0 until width) {
-                screenContent[row][col] = screenContent[row + 1][col]
+                screenContent[row].symbols[col] = screenContent[row + 1].symbols[col]
             }
+            screenContent[row].wrapped = screenContent[row + 1].wrapped
         }
 
         for (col in 0 until width) {
-            screenContent[height - 1][col] = Symbol(' ', TextAttributes.default())
+            screenContent[height - 1].symbols[col] = Symbol(' ', TextAttributes.default())
         }
+        screenContent[height - 1].wrapped = false
 
         return topLine
     }
@@ -73,42 +76,54 @@ class ScreenImpl(
     override fun scrollDown() {
         for (row in height - 1 downTo 1) {
             for (col in 0 until width) {
-                screenContent[row][col] = screenContent[row - 1][col]
+                screenContent[row].symbols[col] = screenContent[row - 1].symbols[col]
             }
+            screenContent[row].wrapped = screenContent[row - 1].wrapped
         }
 
         for (col in 0 until width) {
-            screenContent[0][col] = Symbol(' ', TextAttributes.default())
+            screenContent[0].symbols[col] = Symbol(' ', TextAttributes.default())
         }
+        screenContent[0].wrapped = false
     }
 
-    override fun moveCursorToNextLine() {
+    override fun moveCursorToNextLine(wrapped: Boolean) {
         cursorState.x = 0
         if (cursorState.y < height - 1) {
             cursorState.y++
+        }
+        if (wrapped) {
+            screenContent[cursorState.y].wrapped = true
         }
     }
 
     override fun isAtBottomLine(): Boolean = cursorState.y >= height - 1
 
+    override fun isLineWrapped(row: Int): Boolean {
+        if (row !in 0 until height) {
+            throw IndexOutOfBoundsException("Row $row out of bounds [0, $height)")
+        }
+        return screenContent[row].wrapped
+    }
+
     override fun getLineAsString(row: Int): String {
         if (row !in 0 until height) {
             throw IndexOutOfBoundsException("Row $row out of bounds [0, $height)")
         }
-        return screenContent[row].joinToString(separator = "") { it.char.toString() }.trimEnd()
+        return screenContent[row].symbols.joinToString(separator = "") { it.char.toString() }.trimEnd()
     }
 
     override fun fillLine(char: Char) {
         val row = cursorState.y
         for (col in 0 until width) {
-            screenContent[row][col] = Symbol(char, cursorState.attr)
+            screenContent[row].symbols[col] = Symbol(char, cursorState.attr)
         }
     }
 
     override fun clearLine() {
         val row = cursorState.y
         for (col in 0 until width) {
-            screenContent[row][col] = Symbol(' ', TextAttributes.default())
+            screenContent[row].symbols[col] = Symbol(' ', TextAttributes.default())
         }
     }
 
@@ -160,6 +175,6 @@ class ScreenImpl(
                 "Invalid screen coordinates: row=$row, column=$column (height=$height, width=$width)"
             )
         }
-        return screenContent[row][column].attr
+        return screenContent[row].symbols[column].attr
     }
 }
