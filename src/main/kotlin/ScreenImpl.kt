@@ -14,6 +14,7 @@ class ScreenImpl(
         Line(MutableList(width) { Symbol(' ', TextAttributes.default()) }, wrapped = false)
     }
 
+    /** Maps public row indexing (0 = newest) to internal storage indexing (0 = oldest). */
     private fun toInternalRow(publicRow: Int): Int {
         if (publicRow !in 0 until height) {
             throw IndexOutOfBoundsException("Row $publicRow out of bounds [0, $height)")
@@ -21,6 +22,7 @@ class ScreenImpl(
         return height - 1 - publicRow
     }
 
+    /** Maps internal storage indexing (0 = oldest) back to public row indexing (0 = newest). */
     private fun toPublicRow(internalRow: Int): Int {
         if (internalRow !in 0 until height) {
             throw IndexOutOfBoundsException("Row $internalRow out of bounds [0, $height)")
@@ -71,6 +73,11 @@ class ScreenImpl(
         }
     }
 
+    /**
+     * Scrolls the visible screen up by one line.
+     *
+     * The oldest internal line is returned so caller can push it to scrollback.
+     */
     override fun scrollUp(): Line {
         val topLine = Line(screenContent[0].symbols.toMutableList(), screenContent[0].wrapped)
 
@@ -103,6 +110,7 @@ class ScreenImpl(
         screenContent[0].wrapped = false
     }
 
+    /** Moves cursor to next internal row and sets wrapped flag for that target row. */
     override fun moveCursorToNextLine(wrapped: Boolean) {
         cursorState.position = cursorState.position.copy(column = 0)
         if (cursorState.position.row < height - 1) {

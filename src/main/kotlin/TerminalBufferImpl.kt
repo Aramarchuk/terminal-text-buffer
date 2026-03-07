@@ -7,6 +7,10 @@ class TerminalBufferImpl(
     val screen: Screen = ScreenImpl(width, height),
     val scrollback: Scrollback = ScrollbackImpl(scrollbackSize)
 ) : TerminalBuffer, ScreenPublic by screen, ScrollbackPublic by scrollback {
+    /**
+     * Returns full content in visual reading order (oldest -> newest),
+     * even though random-access row indexing is newest-first.
+     */
     override fun getScreenAndScrollbackAsString(): String {
         val sb = StringBuilder()
         val scrollbackLines = scrollback.getActualSize()
@@ -61,6 +65,12 @@ class TerminalBufferImpl(
         screen.scrollDown()
     }
 
+    /**
+     * Writes text at cursor, replacing existing cells.
+     *
+     * Handles explicit newlines and implicit wrapping; when bottom is reached,
+     * one line is scrolled out of screen and pushed to scrollback.
+     */
     override fun writeText(text: String) {
         for (char in text) {
             if (char == '\n') {
@@ -85,6 +95,12 @@ class TerminalBufferImpl(
         }
     }
 
+    /**
+     * Inserts text at cursor, shifting existing cells right.
+     *
+     * If insertion overflows the line, the last symbol is re-inserted from column 0
+     * of the next line, preserving insert semantics across wrapped lines.
+     */
     override fun insertText(text: String) {
         for (char in text) {
             if (char == '\n') {
