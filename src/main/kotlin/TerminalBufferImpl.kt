@@ -22,8 +22,12 @@ class TerminalBufferImpl(
         column: Int,
         row: Int
     ): TextAttributes {
-        return if (row < height) screen.getAttributesAt(column, row)
-        else scrollback.getAttributesAt(column, row)
+        return if (row < height) {
+            screen.getAttributesAt(column, row)
+        }
+        else {
+            scrollback.getAttributesAt(column, row-height)
+        }
     }
 
     override fun getLineAsString(row: Int): String {
@@ -31,6 +35,14 @@ class TerminalBufferImpl(
             screen.getLineAsString(row)
         } else {
             scrollback.getLineAsString(row - height)
+        }
+    }
+
+    override fun getCharAt(column: Int, row: Int): Char {
+        return if (row < height) {
+            screen.getCharAt(column, row)
+        } else {
+            scrollback.getCharAt(column, row-height)
         }
     }
 
