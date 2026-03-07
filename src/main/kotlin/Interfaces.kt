@@ -3,20 +3,22 @@ package io.github.aramarchuk.terminalbuffer
 interface ScreenInternal {
     fun writeChar(char: Char)
     fun insertChar(char: Char): Symbol?
-    fun scrollUp(): List<Symbol>
+    fun scrollUp(): Line
     fun scrollDown()
-    fun moveCursorToNextLine()
+    fun moveCursorToNextLine(wrapped: Boolean = false)
     fun isAtBottomLine(): Boolean
     fun getLineAsString(row: Int): String
+    fun isLineWrapped(row: Int): Boolean
 }
 interface ScrollbackPublic {
     fun getCharAt(column: Int, row: Int): Char // Get character at position (from screen and scrollback)
     fun getAttributesAt(column: Int, row: Int): TextAttributes // Get attributes at position
     fun getLineAsString(row: Int): String // Get line as string (from screen and scrollback)
+    fun isLineWrapped(row: Int): Boolean // Whether the line is a wrapped continuation
 }
 
 interface ScrollbackInternal {
-    fun pushLine(line: List<Symbol>)
+    fun pushLine(line: Line)
     fun getActualSize(): Int
     fun clear()
 }
@@ -44,6 +46,8 @@ interface ScreenPublic {
     fun getAttributesAt(column: Int, row: Int): TextAttributes
     fun setAttributes(attributes: TextAttributes)
     fun getAttributes(): TextAttributes
+
+    fun isLineWrapped(row: Int): Boolean // Whether the line is a wrapped continuation
 }
 
 interface Screen: ScreenInternal, ScreenPublic
@@ -61,5 +65,6 @@ interface TerminalBuffer :
     fun getScreenAndScrollbackAsString(): String // Get entire screen+scrollback content as string
     override fun getAttributesAt(column: Int, row: Int): TextAttributes
     override fun getCharAt(column: Int, row: Int): Char
+    override fun isLineWrapped(row: Int): Boolean
 }
 

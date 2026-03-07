@@ -2,10 +2,12 @@ package io.github.aramarchuk.terminalbuffer
 
 data class Symbol(val char: Char = ' ', val attr: TextAttributes)
 
+data class Line(val symbols: MutableList<Symbol>, var wrapped: Boolean = false)
+
 class ScrollbackImpl(
     private var scrollbackSize: Int
 ) : Scrollback {
-    private val content: ArrayDeque<ArrayDeque<Symbol>> = ArrayDeque()
+    private val content: ArrayDeque<Line> = ArrayDeque()
 
     override fun clear() {
         content.clear()
@@ -15,7 +17,7 @@ class ScrollbackImpl(
 
     override fun getCharAt(column: Int, row: Int): Char =
         content.getOrNull(row)
-            ?.getOrNull(column)
+            ?.symbols?.getOrNull(column)
             ?.char ?: error("Out of bounds")
 
     override fun getAttributesAt(
@@ -23,19 +25,20 @@ class ScrollbackImpl(
         row: Int
     ): TextAttributes =
         content.getOrNull(row)
-            ?.getOrNull(column)?.attr ?: error("Out of bounds")
+            ?.symbols?.getOrNull(column)?.attr ?: error("Out of bounds")
 
     override fun getLineAsString(row: Int): String =
         content.getOrNull(row)
-            ?.joinToString(separator = "") { it.char.toString() }
+            ?.symbols?.joinToString(separator = "") { it.char.toString() }
             ?.trimEnd()
             ?: error("Out of bounds")
 
-    override fun pushLine(line: List<Symbol>) {
-        // Add the new line to the end of scrollback
-        content.addLast(ArrayDeque(line))
+    override fun isLineWrapped(row: Int): Boolean =
+        content.getOrNull(row)?.wrapped ?: error("Out of bounds")
 
-        // Remove the oldest line if we exceed scrollback size
+    override fun pushLine(line: Line) {
+        content.addLast(line)
+
         if (content.size > scrollbackSize) {
             content.removeFirst()
         }
