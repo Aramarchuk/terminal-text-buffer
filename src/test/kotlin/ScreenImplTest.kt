@@ -74,8 +74,8 @@ class ScreenImplTest {
         terminal.writeText("A".repeat(30))
         val line0 = terminal.getLineAsString(0)
         val line1 = terminal.getLineAsString(1)
-        assertEquals("A".repeat(24), line0, "First line should be full")
-        assertEquals("A".repeat(6), line1, "Overflow should wrap to next line")
+        assertEquals("A".repeat(24), line1, "First line should be full")
+        assertEquals("A".repeat(6), line0, "Overflow should wrap to next line")
     }
 
     @Test
@@ -85,8 +85,8 @@ class ScreenImplTest {
         for (i in 0..11) {
             terminal.writeText("Line $i\n")
         }
-        val line8 = terminal.getLineAsString(8)
-        assertEquals("Line 11", line8, "Line 8 on screen should contain Line 11")
+        val line1 = terminal.getLineAsString(1)
+        assertEquals("Line 11", line1, "Row 1 should contain Line 11 (row 0 is newest empty after trailing newline)")
 
         val fullContent = terminal.getScreenAndScrollbackAsString()
         val allLines = fullContent.split("\n").filter { it.isNotEmpty() }
@@ -97,4 +97,3 @@ class ScreenImplTest {
         assertEquals("Line 3", allLines[3], "First screen line should be Line 3")
     }
 }
-

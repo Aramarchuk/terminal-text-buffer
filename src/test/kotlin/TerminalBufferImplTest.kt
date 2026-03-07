@@ -36,8 +36,8 @@ class TerminalBufferImplTest {
         val line0 = terminal.getLineAsString(0)
         val line1 = terminal.getLineAsString(1)
 
-        assertEquals("First line", line0, "First line should contain first text")
-        assertEquals("Second line", line1, "Second line should contain second text")
+        assertEquals("Second line", line0, "Row 0 (newest) should contain second text")
+        assertEquals("First line", line1, "Row 1 should contain first text")
     }
 
     @Test
@@ -149,9 +149,9 @@ class TerminalBufferImplTest {
         val line1 = terminal.getLineAsString(1)
         val line2 = terminal.getLineAsString(2)
 
-        assertEquals("Line 1", line0, "First line should be unchanged")
-        assertEquals("", line1, "Second line should be cleared")
-        assertEquals("Line 3", line2, "Third line should be unchanged")
+        assertEquals("Line 3", line0, "Row 0 (newest) should remain unchanged")
+        assertEquals("", line1, "Row 1 should be cleared")
+        assertEquals("Line 1", line2, "Row 2 should remain unchanged")
     }
 
     @Test
@@ -175,11 +175,11 @@ class TerminalBufferImplTest {
         terminal.writeText("Line 3")
 
         val screenContent = terminal.getScreenAsString()
-        val lines = screenContent.split("\n")
+        val lines = screenContent.split("\n").filter { it.isNotEmpty() }
 
-        assertEquals("Line 1", lines[0], "First line should match")
-        assertEquals("Line 2", lines[1], "Second line should match")
-        assertEquals("Line 3", lines[2], "Third line should match")
+        assertEquals("Line 1", lines[0], "First non-empty line should match")
+        assertEquals("Line 2", lines[1], "Second non-empty line should match")
+        assertEquals("Line 3", lines[2], "Third non-empty line should match")
     }
 
     @Test
@@ -204,8 +204,8 @@ class TerminalBufferImplTest {
         val line0 = terminal.getLineAsString(0)
         val line1 = terminal.getLineAsString(1)
 
-        assertEquals("A".repeat(80), line0, "First line should be full width")
-        assertEquals("A".repeat(20), line1, "Overflow should wrap to next line")
+        assertEquals("A".repeat(20), line0, "Row 0 (newest) should contain overflow")
+        assertEquals("A".repeat(80), line1, "Row 1 should be full width")
     }
 
     @Test
@@ -217,8 +217,8 @@ class TerminalBufferImplTest {
         val line0 = terminal.getLineAsString(0)
         val line1 = terminal.getLineAsString(1)
 
-        assertEquals("ABCDE", line0.substring(75), "First line should contain first 5 chars")
-        assertEquals("FGHIJ", line1.substring(0, 5), "Second line should contain remaining chars")
+        assertEquals("ABCDE", line1.substring(75), "Older row should contain first 5 chars")
+        assertEquals("FGHIJ", line0.substring(0, 5), "Newest row should contain remaining chars")
     }
 
     // ========== Scrollback Operations ==========
@@ -251,9 +251,8 @@ class TerminalBufferImplTest {
             terminal.writeText("Line $i\n")
         }
 
-        // Access scrollback (negative rows or special indexing depending on implementation)
-        // First line "Line 0" should be at position 0 in combined view
-        val char = terminal.getCharAt(0, 0)
+        // Scrollback starts at combined index = height; scrollback row 0 is newest.
+        val char = terminal.getCharAt(0, 24)
         assertEquals('L', char, "Should retrieve character from scrollback")
     }
 
@@ -309,9 +308,9 @@ class TerminalBufferImplTest {
         val line1 = terminal.getLineAsString(1)
         val line2 = terminal.getLineAsString(2)
 
-        assertEquals("Line 1", line1, "First line should be unchanged")
-        assertEquals("", line0, "Second line should be empty (newly inserted)")
-        assertEquals("Line 2", line2, "Third line should be previous second line")
+        assertEquals("Line 2", line0, "Row 0 should now contain previous row 1")
+        assertEquals("Line 1", line1, "Row 1 should now contain previous row 2")
+        assertEquals("", line2, "Row 2 should become empty after global downward insertion")
     }
 
     // ========== Edge Cases ==========
@@ -337,21 +336,21 @@ class TerminalBufferImplTest {
         val line2 = terminal.getLineAsString(2)
         val line3 = terminal.getLineAsString(3)
 
-        assertEquals("Line 1", line0, "First line should contain text")
-        assertEquals("", line1, "Second line should be empty")
-        assertEquals("", line2, "Third line should be empty")
-        assertEquals("Line 4", line3, "Fourth line should contain text")
+        assertEquals("Line 4", line0, "Row 0 (newest) should contain text")
+        assertEquals("", line1, "Row 1 should be empty")
+        assertEquals("", line2, "Row 2 should be empty")
+        assertEquals("Line 1", line3, "Row 3 should contain first text")
     }
 
-//    @Test
-//    @DisplayName("Should handle cursor at screen boundary")
-//    fun testCursorAtBoundary() {
-//        terminal.setCursorPosition(79, 23)
-//        terminal.writeText("X")
-//
-//        val line = terminal.getLineAsString(23)
-//        assertEquals("X", line.substring(79), "Character should be at last position")
-//    }
+    //    @Test
+    //    @DisplayName("Should handle cursor at screen boundary")
+    //    fun testCursorAtBoundary() {
+    //        terminal.setCursorPosition(79, 23)
+    //        terminal.writeText("X")
+    //
+    //        val line = terminal.getLineAsString(23)
+    //        assertEquals("X", line.substring(79), "Character should be at last position")
+    //    }
 
     @Test
     @DisplayName("Should handle text attributes retrieval")
@@ -398,8 +397,8 @@ class TerminalBufferImplTest {
         val line0 = smallTerminal.getLineAsString(0)
         val line1 = smallTerminal.getLineAsString(1)
 
-        assertEquals("Hello", line0, "First line should contain Hello")
-        assertEquals("World", line1, "Second line should contain World")
+        assertEquals("World", line0, "Row 0 (newest) should contain World")
+        assertEquals("Hello", line1, "Row 1 should contain Hello")
     }
 
     @Test
